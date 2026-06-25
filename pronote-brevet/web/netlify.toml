@@ -1,0 +1,12 @@
+[build]
+  publish = "."
+  command = "echo 'No build needed'"
+
+[build.environment]
+  HUGO_VERSION = "0"
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

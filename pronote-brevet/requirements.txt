@@ -1,0 +1,2 @@
+pronotepy
+opencv-python-headless

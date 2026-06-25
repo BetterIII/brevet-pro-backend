@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>Brevet Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f172a; color: #f1f5f9; transition: background 0.3s, color 0.3s; }
+        body.light { background: #f8fafc; color: #0f172a; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        h1 { font-size: 24px; margin-bottom: 20px; text-align: center; }
+        .card { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #334155; transition: background 0.3s, border 0.3s; }
+        body.light .card { background: #ffffff; border: 1px solid #e2e8f0; }
+        .btn { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 10px; transition: background 0.3s; }
+        .btn:active { background: #2563eb; }
+        .btn.success { background: #22c55e; }
+        .btn.danger { background: #ef4444; }
+        .btn.ghost { background: transparent; border: 1px solid #3b82f6; }
+        body.light .btn.ghost { border-color: #2563eb; color: #2563eb; }
+        input, select { background: #334155; border: 1px solid #475569; color: white; padding: 12px; border-radius: 8px; width: 100%; margin: 8px 0; font-size: 16px; transition: background 0.3s, border 0.3s; }
+        body.light input, body.light select { background: #f1f5f9; border: 1px solid #cbd5e1; color: #0f172a; }
+        .result { background: #22c55e; color: white; padding: 16px; border-radius: 8px; margin-top: 16px; text-align: center; font-weight: bold; }
+        .result.fail { background: #ef4444; }
+        .nav { display: flex; gap: 10px; margin-bottom: 20px; overflow-x: auto; }
+        .nav button { flex: 1; padding: 10px; background: #1e293b; color: #94a3b8; border: 1px solid #334155; border-radius: 8px; transition: background 0.3s; }
+        .nav button.active { background: #3b82f6; color: white; }
+        body.light .nav button { background: #ffffff; color: #64748b; border-color: #e2e8f0; }
+        body.light .nav button.active { background: #2563eb; color: white; }
+        .hidden { display: none; }
+        .question { margin-bottom: 20px; }
+        .question-text { font-weight: bold; margin-bottom: 10px; }
+        .choice { background: #334155; padding: 12px; margin: 8px 0; border-radius: 8px; cursor: pointer; transition: background 0.3s; }
+        .choice.selected { background: #3b82f6; }
+        body.light .choice { background: #f1f5f9; }
+        body.light .choice.selected { background: #3b82f6; color: white; }
+        .progress { height: 8px; background: #334155; border-radius: 4px; margin-bottom: 20px; }
+        .progress-bar { height: 100%; background: #3b82f6; border-radius: 4px; transition: width 0.3s; }
+        body.light .progress { background: #e2e8f0; }
+        .stat-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 10px; }
+        .stat-box { background: #0f172a; padding: 12px; border-radius: 8px; text-align: center; }
+        body.light .stat-box { background: #f1f5f9; }
+        .stat-value { font-size: 24px; font-weight: bold; color: #3b82f6; }
+        .stat-label { font-size: 12px; color: #94a3b8; }
+        body.light .stat-label { color: #64748b; }
+        .toggle { position: fixed; top: 20px; right: 20px; background: #1e293b; border: 1px solid #334155; padding: 10px; border-radius: 50%; cursor: pointer; z-index: 1000; }
+        body.light .toggle { background: #ffffff; border-color: #e2e8f0; }
+        .matiere-btn { background: #334155; padding: 15px; margin: 8px 0; border-radius: 8px; cursor: pointer; text-align: left; transition: background 0.3s; }
+        .matiere-btn:hover { background: #3b82f6; }
+        body.light .matiere-btn { background: #f1f5f9; }
+        body.light .matiere-btn:hover { background: #3b82f6; color: white; }
+    </style>
+</head>
+<body>
+    <button class="toggle" onclick="toggleTheme()">🌙</button>
+    
+    <div class="container">
+        <h1>🎓 Brevet Pro</h1>
+        
+        <div class="nav">
+            <button onclick="showPage('home')" class="active" id="nav-home">Accueil</button>
+            <button onclick="showPage('exam')" id="nav-exam">Brevet</button>
+            <button onclick="showPage('revision')" id="nav-revision">Révision</button>
+            <button onclick="showPage('calc')" id="nav-calc">Calcul</button>
+            <button onclick="showPage('history')" id="nav-history">Historique</button>
+            <button onclick="showPage('settings')" id="nav-settings">⚙️</button>
+        </div>
+
+        <div id="page-home">
+            <div class="card">
+                <h2>🔗 Ma moyenne Pronote</h2>
+                <p>Moyenne générale du contrôle continu /20 :</p>
+                <input type="number" id="moyenne-cc" placeholder="0-20" min="0" max="20" step="0.1" onchange="saveMoyenneCC()">
+                <button class="btn success" onclick="loadMoyenneFromPronote()" style="margin-top: 10px;">🔗 Récupérer depuis Pronote</button>
+                <p id="pronote-status" style="color: #22c55e; font-size: 14px; margin-top: 10px;"></p>
+            </div>
+
+            <div class="card">
+                <h2>📊 Calcul rapide</h2>
+                <p>Note épreuves /20 :</p>
+                <input type="number" id="note-ep" placeholder="0-20" min="0" max="20" step="0.1">
+                <button class="btn success" onclick="calculer()">🧮 Calculer</button>
+                <div id="calc-result" class="result hidden"></div>
+            </div>
+            
+            <div class="card">
+                <h2>🎓 Brevet blanc complet</h2>
+                <p>7 matières • Sujets types • Explications</p>
+                <button class="btn success" onclick="startExam()">✏️ Commencer</button>
+            </div>
+
+            <div class="card">
+                <h2>📈 Statistiques</h2>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-exams">0</div>
+                        <div class="stat-label">Examens</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-avg">-</div>
+                        <div class="stat-label">Moyenne</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-best">-</div>
+                        <div class="stat-label">Meilleur</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-value" id="stat-rate">0%</div>
+                        <div class="stat-label">Réussite</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="page-exam" class="hidden">
+            <div class="progress"><div class="progress-bar" id="progress-bar"></div></div>
+            <div class="card">
+                <h2 id="exam-title">Matière 1/7</h2>
+                <div id="exam-questions"></div>
+                <button class="btn success" onclick="nextQuestion()">Suivant</button>
+            </div>
+        </div>
+
+        <div id="page-revision" class="hidden">
+            <div class="card">
+                <h2>📚 Révision par matière</h2>
+                <p>Choisis une matière pour t'entraîner :</p>
+                <div id="matiere-list"></div>
+            </div>
+        </div>
+
+        <div id="page-calc" class="hidden">
+            <div class="card">
+                <h2>⚡ Calcul rapide</h2>
+                <p>Note épreuves /20 :</p>
+                <input type="number" id="calc-ep" placeholder="0-20" min="0" max="20" step="0.1">
+                <p>Moyenne contrôle continu /20 :</p>
+                <input type="number" id="calc-cc" placeholder="0-20" min="0" max="20" step="0.1">
+                <button class="btn success" onclick="calculer()">🧮 Calculer</button>
+                <div id="quick-result" class="result hidden"></div>
+            </div>
+        </div>
+
+        <div id="page-history" class="hidden">
+            <div class="card">
+                <h2>📜 Historique</h2>
+                <button class="btn ghost" onclick="exportHistory()" style="margin-bottom: 10px;">📥 Exporter</button>
+                <button class="btn danger" onclick="clearHistory()" style="margin-bottom: 10px;">🗑️ Effacer</button>
+                <div id="history-list"></div>
+            </div>
+        </div>
+
+        <div id="page-settings" class="hidden">
+            <div class="card">
+                <h2>⚙️ Paramètres</h2>
+                <button class="btn" onclick="toggleTheme()">🌙 Changer thème</button>
+                <button class="btn ghost" onclick="resetData()" style="margin-top: 10px;">🔄 Réinitialiser données</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const MATIERES = [
+            { nom: "Français", cle: "francais" },
+            { nom: "Mathématiques", cle: "maths" },
+            { nom: "Histoire", cle: "histoire" },
+            { nom: "Géographie", cle: "geo" },
+            { nom: "EMC", cle: "emc" },
+            { nom: "Physique-Chimie", cle: "pc" },
+            { nom: "SVT", cle: "svt" }
+        ];
+
+        const SUJETS = {
+            francais: [
+                { question: "Quelle figure de style consiste à exagérer une idée ?", choices: ["La métaphore", "L'hyperbole", "L'euphémisme", "La litote"], answer: 1, explication: "L'hyperbole exagère pour mettre en valeur." },
+                { question: "Dans un récit, le point de vue interne signifie que :", choices: ["Le narrateur sait tout", "On voit par les yeux d'un personnage", "Le narrateur est absent", "Le récit est au présent"], answer: 1, explication: "Le point de vue interne permet de voir à travers un personnage." },
+                { question: "Un alexandrin est un vers de combien de syllabes ?", choices: ["8", "10", "12", "14"], answer: 2, explication: "L'alexandrin a 12 syllabes." },
+                { question: "La phrase exclamative se termine par :", choices: ["Un point", "Des guillemets", "Un point d'exclamation", "Deux points"], answer: 2, explication: "La phrase exclamative exprime l'émotion et se termine par !" },
+                { question: "Quel est le COD dans 'Il lit un livre' ?", choices: ["Il", "lit", "un livre", "dans"], answer: 2, explication: "Le COD est ce sur quoi porte l'action du verbe." }
+            ],
+            maths: [
+                { question: "Quelle est la valeur de 3/4 + 1/2 ?", choices: ["4/6", "5/4", "1/4", "7/8"], answer: 1, explication: "3/4 + 2/4 = 5/4 = 1,25" },
+                { question: "Un triangle rectangle a des côtés de 3 cm et 4 cm. L'hypoténuse mesure :", choices: ["5 cm", "6 cm", "7 cm", "12 cm"], answer: 0, explication: "Théorème de Pythagore : h² = 3² + 4² = 25, donc h = 5 cm" },
+                { question: "Le volume d'un cube de côté 3 cm est :", choices: ["9 cm³", "18 cm³", "27 cm³", "36 cm³"], answer: 2, explication: "Volume = côté³ = 3³ = 27 cm³" },
+                { question: "Si x + 7 = 15, alors x vaut :", choices: ["6", "7", "8", "22"], answer: 2, explication: "x = 15 - 7 = 8" },
+                { question: "Une réduction de 20% sur 50€ donne :", choices: ["30€", "40€", "45€", "48€"], answer: 1, explication: "20% de 50€ = 10€, donc 50€ - 10€ = 40€" }
+            ],
+            histoire: [
+                { question: "La Révolution française débute en :", choices: ["1789", "1815", "1848", "1914"], answer: 0, explication: "La Révolution commence le 14 juillet 1789." },
+                { question: "La Première Guerre mondiale se termine en :", choices: ["1914", "1916", "1918", "1939"], answer: 2, explication: "L'armistice est signé le 11 novembre 1918." },
+                { question: "La Déclaration des droits de l'homme date de :", choices: ["1789", "1792", "1804", "1870"], answer: 0, explication: "Adoptée en 1789 pendant la Révolution." },
+                { question: "Qui était chef de l'État en 1940 (Vichy) ?", choices: ["De Gaulle", "Pétain", "Clemenceau", "Mitterrand"], answer: 1, explication: "Philippe Pétain dirigera le régime de Vichy." },
+                { question: "La construction européenne débute après :", choices: ["La Révolution", "La Première Guerre mondiale", "La Seconde Guerre mondiale", "La Guerre froide"], answer: 2, explication: "Pour éviter de nouveaux conflits après 1945." }
+            ],
+            geo: [
+                { question: "Quelle est la capitale de l'Allemagne ?", choices: ["Munich", "Hambourg", "Berlin", "Francfort"], answer: 2, explication: "Berlin est la capitale depuis 1990." },
+                { question: "Le fleuve le plus long de France est :", choices: ["La Seine", "Le Rhône", "La Loire", "La Garonne"], answer: 2, explication: "La Loire fait plus de 1000 km." },
+                { question: "Une métropole est :", choices: ["Un petit village", "Une grande ville polarisant un territoire", "Un désert", "Une zone montagneuse"], answer: 1, explication: "Une métropole influence économiquement son territoire." },
+                { question: "La France est située principalement en :", choices: ["Asie", "Afrique", "Europe", "Amérique"], answer: 2, explication: "La France est en Europe occidentale." },
+                { question: "Le réchauffement climatique entraîne :", choices: ["Baisse du niveau des mers", "Fonte des glaces", "Disparition des cyclones", "Refroidissement"], answer: 1, explication: "La fonte des glaces augmente le niveau des mers." }
+            ],
+            emc: [
+                { question: "La laïcité en France signifie que :", choices: ["L'État impose une religion", "L'État est neutre en matière religieuse", "Les religions sont interdites", "Seule une religion est autorisée"], answer: 1, explication: "L'État ne favorise ni n'interdit aucune religion." },
+                { question: "A quoi sert le droit de vote ?", choices: ["Choisir ses professeurs", "Participer à la vie démocratique", "Éviter les impôts", "Créer des lois seul"], answer: 1, explication: "Le vote permet d'élire des représentants." },
+                { question: "La Déclaration universelle des droits de l'homme date de :", choices: ["1789", "1948", "1968", "2000"], answer: 1, explication: "Adoptée par l'ONU en 1948 après la Seconde Guerre mondiale." },
+                { question: "Un média libre doit :", choices: ["Cacher l'information", "Informer avec indépendance", "Ne parler que du sport", "Être contrôlé par l'État"], answer: 1, explication: "L'indépendance garantit une information de qualité." },
+                { question: "Le harcèlement scolaire est :", choices: ["Un jeu normal", "Une violence répétée à sanctionner", "Autorisé en cours", "Sans conséquence"], answer: 1, explication: "Le harcèlement est une violence qui doit être signalée." }
+            ],
+            pc: [
+                { question: "L'unité de force est le :", choices: ["Joule", "Newton", "Watt", "Pascal"], answer: 1, explication: "Le Newton (N) est l'unité internationale de force." },
+                { question: "L'eau bout à 100°C à :", choices: ["Pression normale", "Toute pression", "0°C", "En altitude uniquement"], answer: 0, explication: "À pression atmosphérique normale." },
+                { question: "Un atome est formé d'un noyau et de :", choices: ["Protons uniquement", "Électrons", "Neutrons seulement", "Molécules"], answer: 1, explication: "Les électrons gravitent autour du noyau." },
+                { question: "La formule chimique de l'eau est :", choices: ["CO2", "H2O", "O2", "NaCl"], answer: 1, explication: "2 atomes d'hydrogène pour 1 atome d'oxygène." },
+                { question: "La vitesse se calcule par :", choices: ["distance x temps", "distance / temps", "masse / volume", "force x distance"], answer: 1, explication: "vitesse = distance / temps" }
+            ],
+            svt: [
+                { question: "La photosynthèse se déroule principalement dans :", choices: ["Les racines", "Les feuilles", "Les fleurs", "L'écorce"], answer: 1, explication: "Les feuilles contiennent la chlorophylle." },
+                { question: "L'ADN est contenu dans :", choices: ["Le noyau des cellules", "L'air", "L'eau pure", "Les roches"], answer: 0, explication: "L'ADN est dans le noyau des cellules eucaryotes." },
+                { question: "Un écosystème comprend des êtres vivants et :", choices: ["Rien d'autre", "Leur milieu de vie", "Uniquement l'eau", "Des voitures"], answer: 1, explication: "Les êtres vivants interagissent avec leur milieu." },
+                { question: "La reproduction sexuée implique :", choices: ["Un seul parent", "Deux cellules reproductrices", "Aucune cellule", "Uniquement des spores"], answer: 1, explication: "Fusion d'un spermatozoïde et d'un ovule." },
+                { question: "Le système digestif sert à :", choices: ["Respirer", "Transformer les aliments", "Pomper le sang", "Produire des hormones"], answer: 1, explication: "La digestion transforme les aliments en nutriments." }
+            ]
+        };
+
+        let currentMatiere = 0;
+        let currentQuestion = 0;
+        let reponses = {};
+        let notesMatiere = {};
+        let revisionMode = false;
+        let revisionMatiere = null;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            loadMoyenneCC();
+            loadStats();
+            loadMatiereList();
+        });
+
+        function showPage(page) {
+            document.querySelectorAll('[id^="page-"]').forEach(p => p.classList.add('hidden'));
+            document.getElementById('page-' + page).classList.remove('hidden');
+            document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+            document.getElementById('nav-' + page).classList.add('active');
+            
+            if (page === 'history') loadHistory();
+            if (page === 'home') loadStats();
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light');
+            const isLight = document.body.classList.contains('light');
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+            document.querySelector('.toggle').textContent = isLight ? '☀️' : '🌙';
+        }
+
+        function loadTheme() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'light') {
+                document.body.classList.add('light');
+                document.querySelector('.toggle').textContent = '☀️';
+            }
+        }
+
+        function loadMoyenneCC() {
+            const cc = localStorage.getItem('moyenneCC');
+            if (cc) {
+                document.getElementById('moyenne-cc').value = cc;
+                document.getElementById('calc-cc').value = cc;
+            }
+        }
+
+        function saveMoyenneCC() {
+            const cc = document.getElementById('moyenne-cc').value;
+            if (cc >= 0 && cc <= 20) {
+                localStorage.setItem('moyenneCC', cc);
+                document.getElementById('pronote-status').textContent = '✔ Moyenne sauvegardée !';
+                setTimeout(() => document.getElementById('pronote-status').textContent = '', 2000);
+            }
+        }
+
+        async function loadMoyenneFromPronote() {
+            const url = prompt("URL de Pronote (ex: https://pronote.ent.com)");
+            const username = prompt("Nom d'utilisateur Pronote");
+            const password = prompt("Mot de passe Pronote");
+            
+            if (!url || !username || !password) {
+                alert("Informations incomplètes");
+                return;
+            }
+            
+            try {
+                const response = await fetch('http://localhost:5000/api/pronote/moyenne', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url, username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('moyenne-cc').value = data.moyenne_cc;
+                    localStorage.setItem('moyenneCC', data.moyenne_cc);
+                    document.getElementById('pronote-status').textContent = `✔ Moyenne récupérée : ${data.moyenne_cc}/20 (${data.periode})`;
+                    setTimeout(() => document.getElementById('pronote-status').textContent = '', 5000);
+                } else {
+                    alert('Erreur: ' + data.error);
+                }
+            } catch (error) {
+                alert('Erreur de connexion au backend. Assurez-vous que le serveur Python est lancé.\n\nCommande: cd backend && python app.py');
+            }
+        }
+
+        function calculer() {
+            const ep = parseFloat(document.getElementById('note-ep').value) || parseFloat(document.getElementById('calc-ep').value) || 0;
+            const cc = parseFloat(document.getElementById('note-cc').value) || parseFloat(document.getElementById('calc-cc').value) || parseFloat(localStorage.getItem('moyenneCC')) || 10;
+            
+            if (ep < 0 || ep > 20 || cc < 0 || cc > 20) {
+                alert('Entrez des notes entre 0 et 20');
+                return;
+            }
+
+            const finale = (cc * 0.4 + ep * 0.6).toFixed(2);
+            let mention = '';
+            if (finale >= 18) mention = '🏆 Très bien avec félicitations';
+            else if (finale >= 16) mention = '🥇 Très bien';
+            else if (finale >= 14) mention = '🥈 Bien';
+            else if (finale >= 12) mention = '🥉 Assez bien';
+            else if (finale >= 10) mention = '✅ Admis sans mention';
+            else mention = '❌ Non admis';
+
+            const resultDiv = document.getElementById('calc-result') || document.getElementById('quick-result');
+            resultDiv.classList.remove('hidden', 'fail');
+            resultDiv.classList.add(finale >= 10 ? 'result' : 'result fail');
+            
+            // Affichage détaillé
+            const ccPoints = (cc * 0.4).toFixed(2);
+            const epPoints = (ep * 0.6).toFixed(2);
+            
+            resultDiv.innerHTML = `
+                <div style="text-align: left; margin-bottom: 10px;">
+                    <p style="font-size: 14px; opacity: 0.9;">📊 Détail du calcul :</p>
+                    <p style="font-size: 13px;">Contrôle continu (40%) : ${cc}/20 → ${ccPoints} pts</p>
+                    <p style="font-size: 13px;">Épreuves (60%) : ${ep}/20 → ${epPoints} pts</p>
+                    <hr style="border-color: rgba(255,255,255,0.2); margin: 8px 0;">
+                    <p style="font-size: 18px; font-weight: bold;">Moyenne finale : ${finale}/20</p>
+                    <p style="font-size: 16px; margin-top: 5px;">${mention}</p>
+                </div>
+            `;
+        }
+
+        function startExam() {
+            currentMatiere = 0;
+            currentQuestion = 0;
+            reponses = {};
+            notesMatiere = {};
+            revisionMode = false;
+            revisionMatiere = null;
+            showPage('exam');
+            showQuestion();
+        }
+
+        function startRevision(matiereCle) {
+            currentMatiere = MATIERES.findIndex(m => m.cle === matiereCle);
+            currentQuestion = 0;
+            reponses = {};
+            notesMatiere = {};
+            revisionMode = true;
+            revisionMatiere = matiereCle;
+            showPage('exam');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const matiere = revisionMode ? MATIERES.find(m => m.cle === revisionMatiere) : MATIERES[currentMatiere];
+            const questions = SUJETS[matiere.cle];
+            const question = questions[currentQuestion];
+
+            const totalMatieres = revisionMode ? 1 : MATIERES.length;
+            const currentMatiereIndex = revisionMode ? 0 : currentMatiere;
+
+            document.getElementById('exam-title').textContent = `${matiere.nom} (${currentMatiereIndex + 1}/${totalMatieres}) - Question ${currentQuestion + 1}/${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${(currentMatiereIndex / totalMatieres + currentQuestion / questions.length / totalMatieres) * 100}%`;
+
+            let html = `<div class="question"><p class="question-text">${question.question}</p>`;
+            question.choices.forEach((choice, i) => {
+                const selected = reponses[matiere.cle]?.[currentQuestion] === i ? 'selected' : '';
+                html += `<div class="choice ${selected}" onclick="selectChoice(${i})">${choice}</div>`;
+            });
+            html += '</div>';
+            document.getElementById('exam-questions').innerHTML = html;
+        }
+
+        function selectChoice(index) {
+            const matiere = revisionMode ? MATIERES.find(m => m.cle === revisionMatiere) : MATIERES[currentMatiere];
+            if (!reponses[matiere.cle]) reponses[matiere.cle] = [];
+            reponses[matiere.cle][currentQuestion] = index;
+            showQuestion();
+        }
+
+        function nextQuestion() {
+            const matiere = revisionMode ? MATIERES.find(m => m.cle === revisionMatiere) : MATIERES[currentMatiere];
+            const questions = SUJETS[matiere.cle];
+
+            if (reponses[matiere.cle]?.[currentQuestion] === undefined) {
+                alert('Répondez à la question');
+                return;
+            }
+
+            currentQuestion++;
+            if (currentQuestion >= questions.length) {
+                notesMatiere[matiere.cle] = calculerNoteMatiere(reponses[matiere.cle], questions);
+                
+                if (revisionMode) {
+                    showRevisionResults();
+                    return;
+                }
+
+                currentMatiere++;
+                currentQuestion = 0;
+
+                if (currentMatiere >= MATIERES.length) {
+                    showResults();
+                    return;
+                }
+            }
+            showQuestion();
+        }
+
+        function calculerNoteMatiere(reps, questions) {
+            const bonnes = reps.filter((r, i) => r === questions[i].answer).length;
+            return ((bonnes / questions.length) * 20).toFixed(2);
+        }
+
+        function showResults() {
+            const moyEp = (Object.values(notesMatiere).reduce((a, b) => a + parseFloat(b), 0) / MATIERES.length).toFixed(2);
+            const cc = parseFloat(localStorage.getItem('moyenneCC')) || 10;
+            const finale = (cc * 0.4 + moyEp * 0.6).toFixed(2);
+
+            let html = '<div class="card"><h2>📊 Résultats du brevet blanc</h2>';
+            MATIERES.forEach(m => {
+                const note = notesMatiere[m.cle];
+                const color = note >= 10 ? '#22c55e' : '#ef4444';
+                html += `<p style="color: ${color}">${m.nom}: ${note}/20</p>`;
+            });
+            html += `<p><strong>Moyenne épreuves: ${moyEp}/20</strong></p>`;
+            html += `<p><strong>Moyenne CC: ${cc}/20</strong></p>`;
+            html += `<p><strong>Moyenne finale: ${finale}/20</strong></p>`;
+            html += `<div class="result ${finale >= 10 ? '' : 'fail'}">${finale >= 10 ? '🎉 BREVET OBTENU' : '❌ BREVET NON OBTENU'}</div>`;
+            
+            html += '<button class="btn" onclick="showExplications()" style="margin-top: 10px;">📝 Voir les explications</button>';
+            html += '<button class="btn ghost" onclick="showPage(\'home\')" style="margin-top: 10px;">← Retour</button></div>';
+
+            document.getElementById('page-exam').innerHTML = html;
+            saveHistory(moyEp, cc, finale, notesMatiere);
+            loadStats();
+        }
+
+        function showRevisionResults() {
+            const matiere = MATIERES.find(m => m.cle === revisionMatiere);
+            const note = notesMatiere[revisionMatiere];
+            
+            let html = '<div class="card"><h2>📊 Résultats</h2>';
+            html += `<p style="font-size: 24px; font-weight: bold; color: ${note >= 10 ? '#22c55e' : '#ef4444'}">${matiere.nom}: ${note}/20</p>`;
+            
+            const questions = SUJETS[revisionMatiere];
+            html += '<div style="margin-top: 20px;">';
+            questions.forEach((q, i) => {
+                const correct = reponses[revisionMatiere][i] === q.answer;
+                html += `<div style="margin-bottom: 15px; padding: 10px; background: ${correct ? '#1e3a2e' : '#3e1a1a'}; border-radius: 8px;">
+                    <p style="color: ${correct ? '#22c55e' : '#ef4444'}">${correct ? '✓' : '✗'} Q${i+1}: ${q.question}</p>
+                    <p style="font-size: 14px; color: #94a3b8;">Ta réponse: ${q.choices[reponses[revisionMatiere][i]]}</p>
+                    <p style="font-size: 14px; color: #22c55e;">Bonne réponse: ${q.choices[q.answer]}</p>
+                    <p style="font-size: 14px; color: #3b82f6;">💡 ${q.explication}</p>
+                </div>`;
+            });
+            html += '</div>';
+            
+            html += '<button class="btn ghost" onclick="showPage(\'revision\')" style="margin-top: 10px;">← Retour</button></div>';
+
+            document.getElementById('page-exam').innerHTML = html;
+        }
+
+        function showExplications() {
+            let html = '<div class="card"><h2>📝 Explications détaillées</h2>';
+            
+            MATIERES.forEach(matiere => {
+                const questions = SUJETS[matiere.cle];
+                html += `<h3 style="margin-top: 20px;">${matiere.nom}</h3>`;
+                questions.forEach((q, i) => {
+                    const correct = reponses[matiere.cle]?.[i] === q.answer;
+                    html += `<div style="margin-bottom: 10px; padding: 10px; background: ${correct ? '#1e3a2e' : '#3e1a1a'}; border-radius: 8px;">
+                        <p style="color: ${correct ? '#22c55e' : '#ef4444'}">${correct ? '✓' : '✗'} Q${i+1}: ${q.question}</p>
+                        <p style="font-size: 14px; color: #3b82f6;">💡 ${q.explication}</p>
+                    </div>`;
+                });
+            });
+            
+            html += '<button class="btn ghost" onclick="showResults()" style="margin-top: 10px;">← Retour résultats</button></div>';
+
+            document.getElementById('page-exam').innerHTML = html;
+        }
+
+        function saveHistory(moyEp, cc, finale, notes) {
+            const history = JSON.parse(localStorage.getItem('brevetHistory') || '[]');
+            history.unshift({
+                date: new Date().toLocaleString('fr-FR'),
+                moyenneEp: moyEp,
+                moyenneCc: cc,
+                moyenneFinale: finale,
+                notes: notes
+            });
+            if (history.length > 50) history.pop();
+            localStorage.setItem('brevetHistory', JSON.stringify(history));
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem('brevetHistory') || '[]');
+            const list = document.getElementById('history-list');
+            
+            if (history.length === 0) {
+                list.innerHTML = '<p>Aucun examen passé</p>';
+                return;
+            }
+
+            list.innerHTML = history.map(h => `
+                <div class="card" style="margin-bottom: 10px;">
+                    <p>📅 ${h.date}</p>
+                    <p>Note finale: <strong style="color: ${h.moyenneFinale >= 10 ? '#22c55e' : '#ef4444'}">${h.moyenneFinale}/20</strong></p>
+                </div>
+            `).join('');
+        }
+
+        function exportHistory() {
+            const history = JSON.parse(localStorage.getItem('brevetHistory') || '[]');
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(history, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "brevet_pro_historique.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function clearHistory() {
+            if (confirm('Effacer tout l\'historique ?')) {
+                localStorage.removeItem('brevetHistory');
+                loadHistory();
+                loadStats();
+            }
+        }
+
+        function loadStats() {
+            const history = JSON.parse(localStorage.getItem('brevetHistory') || '[]');
+            
+            if (history.length === 0) {
+                document.getElementById('stat-exams').textContent = '0';
+                document.getElementById('stat-avg').textContent = '-';
+                document.getElementById('stat-best').textContent = '-';
+                document.getElementById('stat-rate').textContent = '0%';
+                return;
+            }
+
+            const exams = history.length;
+            const avg = (history.reduce((a, b) => a + parseFloat(b.moyenneFinale), 0) / exams).toFixed(1);
+            const best = Math.max(...history.map(h => parseFloat(h.moyenneFinale))).toFixed(1);
+            const rate = Math.round((history.filter(h => h.moyenneFinale >= 10).length / exams) * 100);
+
+            document.getElementById('stat-exams').textContent = exams;
+            document.getElementById('stat-avg').textContent = avg + '/20';
+            document.getElementById('stat-best').textContent = best + '/20';
+            document.getElementById('stat-rate').textContent = rate + '%';
+        }
+
+        function loadMatiereList() {
+            const list = document.getElementById('matiere-list');
+            list.innerHTML = MATIERES.map(m => `
+                <div class="matiere-btn" onclick="startRevision('${m.cle}')">
+                    <strong>${m.nom}</strong>
+                    <span style="font-size: 14px; color: #94a3b8;">${SUJETS[m.cle].length} questions</span>
+                </div>
+            `).join('');
+        }
+
+        function resetData() {
+            if (confirm('Réinitialiser toutes les données ?')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+    </script>
+</body>
+</html>
